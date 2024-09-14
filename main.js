@@ -58,16 +58,17 @@ controlPanel.add(toolPanel);
 
 
 // Add descriptions and links to user manual and videos
-var mainDescription = ui.Label(" Map landslides in 6 easy steps using Machine Learning and Sentinel-2")
+var mainDescription = ui.Label(" Map landslide extent in 6 easy steps using Machine Learning and Sentinel-2")
 mainDescription.style().set({
   fontWeight:'bold',
   fontSize:'14px',
   width: '320px'
 });
-var pdf=ui.Label("User Manual",{},"https://github.com/der-knight/LANDMARK_APP/blob/main/Landmark%20tutorial.pdf" )
+var paper=ui.Label("Research Paper",{},"https://link.springer.com/article/10.1007/s10346-024-02360-3" )
+var pdf=ui.Label("User Manual",{},"https://der-knight.github.io/ml-cascade/" )
 var video=ui.Label("Explaination Video",{},"https://drive.google.com/file/d/15NISU3TrVqjy6Ppf3FwrJkIGAFP3S3Qr/view?usp=drive_link")
 var mainPanel=ui.Panel([mainDescription])
-var infoPanel = ui.Panel([pdf, video],ui.Panel.Layout.flow('horizontal'));
+var infoPanel = ui.Panel([paper,pdf, video],ui.Panel.Layout.flow('horizontal'));
 controlPanel.add(mainPanel);
 controlPanel.add(infoPanel);
 
@@ -82,7 +83,7 @@ var step0 = ui.Label({
 });
 controlPanel.add(step0)
 
-var lonLabel = ui.Label("Enter Longitude");
+var lonLabel = ui.Label("Enter Latitude");
 lonLabel.style().set({
   fontWeight:'bold',
   fontSize:'14px',
@@ -94,7 +95,7 @@ var lonHolder = ui.Textbox({
 var lonPanel = ui.Panel([lonLabel,lonHolder], ui.Panel.Layout.flow('horizontal'));
 
 
-var latLabel = ui.Label("Enter Latitude");
+var latLabel = ui.Label("Enter Longitude");
 
 latLabel.style().set({
   fontWeight:'bold',
@@ -374,7 +375,7 @@ controlPanel.add(ppp);
 // Write a function to clip the image and zoom to AOI
 
 var step3 = ui.Label({
-  value: 'Step 4: Clip and Zoom to AOI',
+  value: 'Step 4: Clip and Zoom to the Area Of Interest',
   style: {height: '40px',width:'320px' ,fontSize: '18px', color: 'ff0000'}
 });
 controlPanel.add(step3);
@@ -437,7 +438,7 @@ controlPanel.add(clip_panel);
 clipButton.onClick(clipAOI);
 
 var step4 = ui.Label({
-  value: 'Step 5: Select landslide samples on after image',
+  value: 'Step 5: Click on location icon and select landslides pixels on after image',
   style: {height: '40px',width:'320px' ,fontSize: '18px', color: 'ff0000'}
 });
 controlPanel.add(step4);
@@ -504,7 +505,7 @@ var landslidePanel=ui.Panel([p1,p2,p5], ui.Panel.Layout.flow('horizontal'));
 controlPanel.add(landslidePanel);
 
 var step5 = ui.Label({
-  value: 'Step 6: Select samples with no landslides on after image',
+  value: 'Step 6: Click on location icon and select non-landslides pixels on after image',
   style: {height: '40px',width:'350px' ,fontSize: '18px', color: 'ff0000'}
 });
 controlPanel.add(step5);
@@ -682,18 +683,35 @@ var afn_SNIC = function(imageOriginal, SuperPixelSize, Compactness,
 
 //Segmentation Layer
 var step6 = ui.Label({
-  value: 'Run ML-CASCASE Algorithm to Display Landslide Extent',
-  style: {height: '40px',width:'320px' ,fontSize: '18px', color: 'ff0000'}
+  value: 'Run ML-CASCASE Algorithm ',
+  style: {height: '40px',width:'228px' ,fontSize: '18px', color: 'ff0000'}
 });
-controlPanel.add(step6);
 
+var f9=function(){
+  var lab=ui.Panel(ui.Label({
+  value: 'Click on the Run Algorithm and wait a few seconds for the app to visualize and generate download links. In case the raw data is large only label will be generated. Use the export version of app for large landslides',
+  style: {width:'175px' ,fontSize: '9px'}
+}));
+  downPanel.add(lab)
+}
+
+var p9=ui.Button({
+      label: 'Click for more info',
+      onClick: f9,
+      imageUrl:'https://www.gstatic.com/images/icons/material/system/1x/info_black_24dp.png'
+    });
+
+
+var downPanel=ui.Panel([step6,p9], ui.Panel.Layout.flow('horizontal'));
+
+controlPanel.add(downPanel);
 //Global variables for classification layer
 
 var desired;
 var classified;
 var im;
 var str;
-
+var vectors;
 var probButton =  ui.Button({
       label: 'Run Algorithm',
       style:{height: '50px',width:'320px' ,fontSize: '30px', color: 'blue'}
@@ -712,8 +730,9 @@ function probablistic_classification(){
   ui.root.add(mapFinal)
   mapFinal.centerObject(AOI_geometry,13);
   
-  mapFinal.addLayer(beforeImage_clipped,visualization,'Before Image')
-  mapFinal.addLayer(afterImage_clipped,visualization,'After Image')
+  // mapFinal.addLayer(beforeImage_clipped,visualization,'Before Image')
+  // mapFinal.addLayer(afterImage_clipped,visualization,'After Image')
+  
   str=ee.String(beforeImage.get('system:index')).slice(0,8).cat(ee.String('_')).cat(ee.String(afterImage.get('system:index')).slice(0,8));
   
   var before_image_ndvi=beforeImage_clipped.normalizedDifference(['B8', 'B4'])
@@ -793,108 +812,223 @@ classified = SNIC_MultiBandedResults.select(predictionBands).classify(classifier
   }
   // close of false block
   
-  mapFinal.addLayer(ee.Image(classified),{min: 0, max: 1, palette: ['black', 'white']},'Probability Layer');
-  mapFinal.addLayer(landslide_points,{color:'FF0000'},"Landslide Points");
-  mapFinal.addLayer(nonlandslide_points,{color:'00FF00'},"Non-Landslide Points");
+  // mapFinal.addLayer(ee.Image(classified),{min: 0, max: 1, palette: ['black', 'white']},'Probability Layer');
+  // mapFinal.addLayer(landslide_points,{color:'FF0000'},"Landslide Points");
+  // mapFinal.addLayer(nonlandslide_points,{color:'00FF00'},"Non-Landslide Points");
+  var cl=ee.Image(classified.gt(0.5))
   
-  var out= ee.Image.cat(im,classified.float());
-  
-  var label = ui.Label('Probability');
+// mapFinal.addLayer(vectors,{min: 0, max: 1, palette: ['FFFFFF', '00FF00']},"Vector");
+desired = classified.gte(0.5)
+var onePixelCount = desired.reduceRegion({
+  reducer: ee.Reducer.sum(),
+  geometry: AOI_geometry,
+  scale: 10,  
+  maxPixels: 1e13
+});
 
-  var slider = ui.Slider({
-    min:0,
-    max: 1,
-    step: 0.01,
-    value:0.5,
-    style: {stretch: 'horizontal', width:'300px'},
-    onChange: updateLayer
+// Calculate the total number of pixels using ee.Reducer.count()
+var totalPixelCount = desired.reduceRegion({
+  reducer: ee.Reducer.count(),
+  geometry:AOI_geometry,
+  scale: 10,
+  maxPixels: 1e13
+});
+
+// Extract the number of 1s and 0s
+var onePixels = onePixelCount.get('classification'); // Replace with your actual band name
+var totalPixels = totalPixelCount.get('classification'); 
+var percentage = ee.Number(onePixels).divide(totalPixels).multiply(ee.Number(100)).format('%.3f');
+
+var out= ee.Image.cat(im,classified.float(),desired.float()).rename(im.bandNames().add('Probability Layer').add('Label'))
+
+// var urlLabel = ui.Label('Download extent as TIFF', {shown:true});
+// var urlLabel1 = ui.Label('Show extent as PNG', {shown:true});
+// var urlLabel2 = ui.Label('Download extent as KML', {shown:true});
+// var urlLabel3 = ui.Label('Show satelite image PNG', {shown:true});
+
+// var url = desired.float().getDownloadURL({
+//   name:str.cat(ee.String('_Label only')).getInfo(),
+//   scale: 10,
+//   format: "ZIPPED_GEO_TIFF"
+// });
+// urlLabel.setUrl(url);
+// urlLabel.style().set({shown: true});
+
+var landslide_label_viz=desired.visualize({palette:["grey","orange"]})
+// var url1 = landslide_label_viz.getThumbURL({region: AOI_geometry, scale: 10, format: 'png'});
+// urlLabel1.setUrl(url1);
+// urlLabel1.style().set({shown: true});
+
+
+// var downloadArgs = {
+//     format: 'kml',
+//     filename: str.cat(ee.String('vector')).getInfo()
+// };
+// var url2 = vectors.getDownloadURL(downloadArgs)
+// urlLabel2.setUrl(url2);
+// urlLabel2.style().set({shown: true});
+
+var after_im_viz=afterImage_clipped.visualize(visualization)
+// var url3=after_im_viz.getThumbURL({region: AOI_geometry, scale: 10, format: 'png'});
+// urlLabel3.setUrl(url3);
+// urlLabel3.style().set({shown: true});
+
+// var download_panel = ui.Panel([urlLabel,urlLabel1],ui.Panel.Layout.Flow('horizontal'));
+// var download_panel1 = ui.Panel([urlLabel2,urlLabel3],ui.Panel.Layout.Flow('horizontal'));
+mapFinal.addLayer(landslide_label_viz,{},'Landslide Extent')
+
+
+//  visualize as Checkboxes
+
+// Define the images with labels
+var before_vizualization=beforeImage_clipped.visualize(visualization)
+var images = {
+  'Satellite image after Landslide': after_im_viz,
+  'Satellite image before Landslide': before_vizualization,
+  'Landslide extent map':landslide_label_viz,
+  // 'Landslide extent vector map':vectors
+};
+var selected_layer =null
+var checkbox
+
+// Store the checkboxes in an array
+var checkboxes = [];
+
+// Function to handle checkbox changes
+function onCheckboxChange(selectedLabel) {
+  // Uncheck all other checkboxes and remove their layers
+  checkboxes.forEach(function(checkboxObj) {
+    if (checkboxObj.label !== selectedLabel) {
+      checkboxObj.checkbox.setValue(false);
+      var layers = mapFinal.layers();
+      for (var i = 0; i < layers.length(); i++) {
+        if (layers.get(i).getName() === checkboxObj.label + ' Image') {
+          layers.remove(layers.get(i));
+        }
+      }
+    }
   });
   
-  function updateLayer(demval){
-    var demval = slider.getValue();
-  
-    // mapFinal.layers().reset();
-    desired = classified.gte(demval)
-    var desiredViz = ui.Map.Layer(desired, {palette:["grey","orange"]}, 'Binary Label')
-    
-    mapFinal.layers().set(5, desiredViz)
-  }
-  
-    var panel = ui.Panel({
-        widgets: [label, slider],
-        layout: ui.Panel.Layout.flow('vertical'),
-        // style: {position: 'bottom-right',width: '520px'
-            // }
-      });
-  
-      // Add the panel to the map.
-      probability_Panel.add(panel);
-      updateLayer(0.5);
+  // Add the selected image to the map
+  var selectedImage = images[selectedLabel];
+  mapFinal.layers().reset();
+  mapFinal.addLayer(selectedImage,'', selectedLabel + ' Image');
 }
 
+// Create a panel to hold the checkboxes
+var checkboxPanel = ui.Panel({
+  style: { padding: '10px'}
+});
+
+// Add checkboxes for each image
+Object.keys(images).forEach(function(label) {
+  checkbox = ui.Checkbox({
+    label: label,
+    value: false, // Initial state is unchecked
+    onChange: function(checked) {
+      if (checked) {
+        onCheckboxChange(label);
+      } else {
+        var layers = mapFinal.layers();
+        for (var i = 0; i < layers.length(); i++) {
+          if (layers.get(i).getName() === label + ' Image') {
+            layers.remove(layers.get(i));
+          }
+        }
+      }
+    }
+  });
+  
+  // Add the checkbox to the array and panel
+  checkboxes.push({label: label, checkbox: checkbox});
+  checkboxPanel.add(checkbox);
+  
+  
+});
+var checkbox_label = ui.Label({
+  value: 'Visualize images on the map',
+  style: {height: '40px',width:'300px' ,fontSize: '18px', color: 'ff0000'}
+});
+// Add the panel to the map
+probability_Panel.add(ui.Label({value: percentage.getInfo()+'% pixels are landslides in the area',
+      style: {color: 'green'}}))
+probability_Panel.add(checkbox_label);
+probability_Panel.add(checkboxPanel);
+
+      // ));
+// probability_Panel.add(download_panel);
+// probability_Panel.add(download_panel1);
+
+}
 probButton.onClick(probablistic_classification);
 
 controlPanel.add(probability_Panel);
 
 
-var step7 = ui.Label({
-  value: 'Download data',
-  style: {height: '40px',fontSize: '18px', color: 'ff0000'}
+
+function create_download_links(){
+  
+var url = desired.float().getDownloadURL({
+  name:str.cat(ee.String('_Label only')).getInfo(),
+  scale: 10,
+  format: "ZIPPED_GEO_TIFF"
 });
+urlLabel.setUrl(url);
+urlLabel.style().set({shown: true});
 
-var f9=function(){
-  var lab=ui.Panel(ui.Label({
-  value: 'Click on the Download button and wait a few seconds for the app to generate download links. In case the raw data is large only label will be generated. Use the export version of app for large landslides',
-  style: {width:'175px' ,fontSize: '9px'}
-}));
-  downPanel.add(lab)
+var landslide_label_viz=desired.visualize({palette:["grey","orange"]})
+var url1 = landslide_label_viz.getThumbURL({region: AOI_geometry, scale: 10, format: 'png'});
+urlLabel1.setUrl(url1);
+urlLabel1.style().set({shown: true});
+var downloadArgs = {
+    format: 'kml',
+    filename: str.cat(ee.String('vector')).getInfo()
+};
+var vectors = desired.reduceToVectors({
+  geometry: AOI_geometry ,
+  // crs: afterImage.projection(),
+  scale: 10,
+  geometryType: 'polygon',
+  // eightConnected: True,
+  labelProperty: "classification",
+  // reducer: ee.Reducer.mean()
+  });
+
+var url2 = vectors.getDownloadURL(downloadArgs)
+urlLabel2.setUrl(url2);
+urlLabel2.style().set({shown: true});
+
+var after_im_viz=afterImage_clipped.visualize(visualization)
+var url3=after_im_viz.getThumbURL({region: AOI_geometry, scale: 10, format: 'png'});
+urlLabel3.setUrl(url3);
+urlLabel3.style().set({shown: true});
 }
 
-var p9=ui.Button({
-      label: 'Click for more info',
-      onClick: f9,
-      imageUrl:'https://www.gstatic.com/images/icons/material/system/1x/info_black_24dp.png'
-    });
+var Download_panel= ui.Label({
+  value: 'Download/ visualize',
+  style: {height: '40px',width:'320px' ,fontSize: '18px', color: 'ff0000'}
+});
+controlPanel.add(Download_panel);
+var downloadButton = ui.Button('Download', create_download_links);
+
+var urlLabel = ui.Label('Download extent as TIFF', {shown:false});
+var urlLabel1 = ui.Label('Show extent as PNG', {shown:false});
+var urlLabel2 = ui.Label('Download extent as KML', {shown:false});
+var urlLabel3 = ui.Label('Show satelite image PNG', {shown:false});
+
+var download_panel = ui.Panel([urlLabel,urlLabel1],ui.Panel.Layout.Flow('horizontal'));
+var download_panel1 = ui.Panel([urlLabel2,urlLabel3],ui.Panel.Layout.Flow('horizontal'));
+controlPanel.add(downloadButton)
+controlPanel.add(download_panel);
+controlPanel.add(download_panel1);
 
 
-var downPanel=ui.Panel([step7,p9], ui.Panel.Layout.flow('horizontal'));
-
-controlPanel.add(downPanel);
-function download(){
-  var out= ee.Image.cat(im,classified.float(),desired.float()).rename(im.bandNames().add('Probability Layer').add('Label'))
-  var url = desired.float().getDownloadURL({
-    name:str.cat(ee.String('_Label only')).getInfo(),
-    scale: 10,
-    format: "ZIPPED_GEO_TIFF"
-  });
-  urlLabel.setUrl(url);
-  urlLabel.style().set({shown: true});
-  var url = out.getDownloadURL({
-    name:str.cat(ee.String('_Raw files and label')).getInfo(),
-    scale: 10,
-    format: "ZIPPED_GEO_TIFF"
-  });
-  urlLabel1.setUrl(url);
-  urlLabel1.style().set({shown: true});
-}
-
-
-var downloadButton = ui.Button('Download', download);
-var urlLabel = ui.Label('Download Label only', {shown:false});
-var urlLabel1 = ui.Label('Download Raw data and Label', {shown:false});
-
-var panel = ui.Panel([urlLabel,urlLabel1],ui.Panel.Layout.Flow('horizontal'));
-controlPanel.add(downloadButton);
-controlPanel.add(panel);
-
-
-
+// Info Steps
 
 var step9 = ui.Label({
   value: 'HydroSense Research Lab, IIT Delhi',
   style: {height: '40px',width:'320px' ,fontSize: '18px', color: '000000'}
 });
-
 controlPanel.add(step9)
 var info= ui.Label('We would be happy to hear from you if you found this useful or have suggestions for improvement')
 controlPanel.add(info)
@@ -904,5 +1038,3 @@ var link = ui.Label('Prof. Manabendra Saharia IIT Delhi', {},'mailto: msaharia@i
 controlPanel.add(link);
 var link = ui.Label('Mr. Nirdesh Sharma PhD Scholar IIT Delhi', {},'mailto: nirdesh@civil.iitd.ac.in');
 controlPanel.add(link);
-
-
