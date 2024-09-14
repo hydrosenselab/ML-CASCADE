@@ -1,7 +1,7 @@
 # ML-CASCADE Machine Learning and Cloud Computing for landslides
 
-This is a repository for the ML-CASCADE app published in the [Landslides](https://link.springer.com/article/10.1007/s10346-024-02360-3) Journal
-The app is located in ![GEE](https://hydrosense.users.earthengine.app/view/ml-cascade) 
+This is a repository for the ML-CASCADE app published in the [Landslides](https://link.springer.com/article/10.1007/s10346-024-02360-3) Journal.  
+The app is located in [GEE](https://hydrosense.users.earthengine.app/view/ml-cascade)  
 
 
 ![Main](https://github.com/der-knight/ML-CASCADE/blob/main/Images/Landslide%20Tool.jpg)
