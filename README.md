@@ -1,7 +1,6 @@
 # ML-CASCADE Machine Learning and Cloud Computing for landslides
 # Cite As
-Published in [Landslides](https://link.springer.com/article/10.1007/s10346-024-02360-3) Journal.  
-Published: Sharma, N., Saharia, M., 2024. ML-CASCADE: A machine learning and cloud computing-based tool for rapid and automated mapping of landslides using earth observation data. Landslides. https://doi.org/10.1007/s10346-024-02360-3  
+Sharma, N., Saharia, M., 2024. ML-CASCADE: A machine learning and cloud computing-based tool for rapid and automated mapping of landslides using earth observation data. Landslides. https://doi.org/10.1007/s10346-024-02360-3  
 The app is located in [GEE](https://hydrosense.users.earthengine.app/view/ml-cascade)  
 
 
